@@ -20,6 +20,7 @@ namespace ModTemplate
         private Harmony _harmony = null;
         public new static ManualLogSource Log;
 
+        public static PluginSaveDataInterface plugin;
 
         public ConfigEntry<bool> ConfigEnabled;
         //public ConfigEntry<string> ConfigSongTitleLanguageOverride;
