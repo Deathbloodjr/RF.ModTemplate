@@ -144,7 +144,7 @@ namespace ModTemplate
         {
             // Add SaveDataManager path to your csproj.user file
             // https://github.com/Deathbloodjr/RF.SaveProfileManager
-            PluginSaveDataInterface plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
+            plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
             plugin.AssignLoadFunction(LoadPlugin);
             plugin.AssignUnloadFunction(UnloadPlugin);
             //plugin.AssignReloadSaveFunction(ReloadPlugin);
