@@ -8,6 +8,7 @@ using ModTemplate.Plugins;
 using UnityEngine;
 using System.Collections;
 using SaveProfileManager.Plugins;
+using System.Reflection;
 
 namespace ModTemplate
 {
@@ -19,8 +20,6 @@ namespace ModTemplate
         public static Plugin Instance;
         private Harmony _harmony = null;
         public new static ManualLogSource Log;
-
-        public static PluginSaveDataInterface plugin;
 
         public ConfigEntry<bool> ConfigEnabled;
         //public ConfigEntry<string> ConfigSongTitleLanguageOverride;
@@ -34,35 +33,33 @@ namespace ModTemplate
 
             Log = base.Log;
 
-            SetupConfig();
+            SetupConfig(Config, Path.Combine("BepInEx", "data", ModName));
             SetupHarmony();
 
-            // The try catch has to be here, rather than inside the AddToSaveManager function, for some reason
-            try
+            var isSaveManagerLoaded = IsSaveManagerLoaded();
+            if (isSaveManagerLoaded)
             {
                 AddToSaveManager();
             }
-            catch
-            {
-
-            }
         }
 
-        private void SetupConfig()
+        // Any data that's likely to be shared between multiple profiles should use the dataFolder path
+        // Any data that's likely to be specific per profile should use the saveFolder path
+        private void SetupConfig(ConfigFile config, string saveFolder)
         {
-            var dataFolder = Path.Combine("BepInEx", "data", ModName);
+            string dataFolder = Path.Combine("BepInEx", "data", ModName);
 
-            ConfigEnabled = Config.Bind("General",
+            ConfigEnabled = config.Bind("General",
                 "Enabled",
                 true,
                 "Enables the mod.");
 
-            //ConfigSongTitleLanguageOverride = Config.Bind("General",
+            //ConfigSongTitleLanguageOverride = config.Bind("General",
             //    "SongTitleLanguageOverride",
             //    "JP",
             //    "Sets the song title to the selected language. (JP, EN, FR, IT, DE, ES, TW, CN, KO)");
 
-            //ConfigFlipInterval = Config.Bind("General",
+            //ConfigFlipInterval = config.Bind("General",
             //    "FlipInterval",
             //    3f,
             //    "How quickly the difficulty flips between oni and ura.");
@@ -87,11 +84,11 @@ namespace ModTemplate
                 //SwapJpEngTitlesPatch.SetOverrideLanguages();
                 if (result)
                 {
-                    Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
+                    Logger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
                 }
                 else
                 {
-                    Log.LogError($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.");
+                    Logger.Log($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.", LogType.Error);
                     // Unload this instance of Harmony
                     // I hope this works the way I think it does
                     Instance._harmony.UnpatchSelf();
@@ -99,7 +96,7 @@ namespace ModTemplate
             }
             else
             {
-                Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
+                Logger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
             }
         }
 
@@ -113,14 +110,14 @@ namespace ModTemplate
             {
                 _harmony.PatchAll(type);
 #if DEBUG
-                Log.LogInfo("File patched: " + type.FullName);
+                Logger.Log("File patched: " + type.FullName);
 #endif
                 return true;
             }
             catch (Exception e)
             {
-                Log.LogInfo("Failed to patch file: " + type.FullName);
-                Log.LogInfo(e.Message);
+                Logger.Log("Failed to patch file: " + type.FullName);
+                Logger.Log(e.Message);
                 return false;
             }
         }
@@ -128,7 +125,7 @@ namespace ModTemplate
         public static void UnloadPlugin()
         {
             Instance._harmony.UnpatchSelf();
-            Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} has been unpatched.");
+            Logger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} has been unpatched.");
         }
 
         public static void ReloadPlugin()
@@ -142,14 +139,28 @@ namespace ModTemplate
 
         public void AddToSaveManager()
         {
-            // Add SaveDataManager path to your csproj.user file
+            // Add SaveDataManager dll path to your csproj.user file
             // https://github.com/Deathbloodjr/RF.SaveProfileManager
-            plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
+            var plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
             plugin.AssignLoadFunction(LoadPlugin);
             plugin.AssignUnloadFunction(UnloadPlugin);
             //plugin.AssignReloadSaveFunction(ReloadPlugin);
+            plugin.AssignConfigSetupFunction(SetupConfig);
             plugin.AddToManager();
             //Logger.Log("Plugin added to SaveDataManager");
+        }
+
+        private bool IsSaveManagerLoaded()
+        {
+            try
+            {
+                Assembly loadedAssembly = Assembly.Load("com.DB.RF.SaveProfileManager");
+                return loadedAssembly != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static MonoBehaviour GetMonoBehaviour() => TaikoSingletonMonoBehaviour<CommonObjects>.Instance;
