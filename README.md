@@ -34,6 +34,13 @@
     - In Visual Studio, you can highlight the namespace, hit Ctrl + R, Ctrl + R, and enter your new namespace to change all instances of it. 
     - You can change the namespaces in the 2 example patches as well, to RootNamespace.Patches
  - Change public const string ModName = your ModName
+
+ At this point, build the project, and it should have some errors
+ - Return to File Explorer and open the .csproj.user file
+ - Put your Rhythm Festival game install directory in GameDir
+ - Download or build the [SaveProfileManager](https://github.com/Deathbloodjr/RF.SaveProfileManager) mod, and place that dll full path in SaveProfileManagerPath
+
+ You project should now be in a buildable state
  
  Outside of code, edit the README.md file
  - Change RF.ModTemplate to your mod's name
@@ -50,4 +57,7 @@
  Newer versions of BepInEx could have breaking API changes until the first stable v6 release, so those are not recommended at this time.
  
  Attempt to build the project, or copy the .csproj.user file from the Resources file to the same directory as the .csproj file.\
- Edit the .csproj.user file and place your Rhythm Festival file location in the "GameDir" variable.
+ Edit the .csproj.user file and place your Rhythm Festival file location in the "GameDir" variable.\
+ Download or build the [SaveProfileManager](https://github.com/Deathbloodjr/RF.SaveProfileManager) mod, and place that dll full path in SaveProfileManagerPath.
+
+Add BepInEx as a nuget package source (https://nuget.bepinex.dev/v3/index.json)

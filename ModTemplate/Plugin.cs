@@ -45,14 +45,17 @@ namespace ModTemplate
 
         // Any data that's likely to be shared between multiple profiles should use the dataFolder path
         // Any data that's likely to be specific per profile should use the saveFolder path
-        private void SetupConfig(ConfigFile config, string saveFolder)
+        private void SetupConfig(ConfigFile config, string saveFolder, bool isSaveManager = false)
         {
             string dataFolder = Path.Combine("BepInEx", "data", ModName);
 
-            ConfigEnabled = config.Bind("General",
-                "Enabled",
-                true,
-                "Enables the mod.");
+            if (!isSaveManager)
+            {
+                ConfigEnabled = config.Bind("General",
+                   "Enabled",
+                   true,
+                   "Enables the mod.");
+            }
 
             //ConfigSongTitleLanguageOverride = config.Bind("General",
             //    "SongTitleLanguageOverride",
@@ -70,12 +73,12 @@ namespace ModTemplate
             // Patch methods
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
 
-            LoadPlugin();
+            LoadPlugin(ConfigEnabled.Value);
         }
 
-        public static void LoadPlugin()
+        public static void LoadPlugin(bool enabled)
         {
-            if (Instance.ConfigEnabled.Value)
+            if (enabled)
             {
                 bool result = true;
                 // If any PatchFile fails, result will become false
@@ -147,7 +150,6 @@ namespace ModTemplate
             //plugin.AssignReloadSaveFunction(ReloadPlugin);
             plugin.AssignConfigSetupFunction(SetupConfig);
             plugin.AddToManager();
-            //Logger.Log("Plugin added to SaveDataManager");
         }
 
         private bool IsSaveManagerLoaded()
