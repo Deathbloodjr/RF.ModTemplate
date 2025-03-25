@@ -147,9 +147,15 @@ namespace ModTemplate
             var plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
             plugin.AssignLoadFunction(LoadPlugin);
             plugin.AssignUnloadFunction(UnloadPlugin);
+
+            // Reloading will always be completely different per mod
+            // You'll want to reload any config file or save data that may be specific per profile
+            // If there's nothing to reload, don't put anything here, and keep it commented in AddToSaveManager
             //plugin.AssignReloadSaveFunction(ReloadPlugin);
-            plugin.AssignConfigSetupFunction(SetupConfig);
-            plugin.AddToManager();
+
+            // Uncomment this if there are more config options than just ConfigEnabled
+            //plugin.AssignConfigSetupFunction(SetupConfig);
+            plugin.AddToManager(ConfigEnabled.Value);
         }
 
         private bool IsSaveManagerLoaded()
